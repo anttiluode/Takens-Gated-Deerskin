@@ -34,7 +34,7 @@ In this simulation, we feed the network a chaotic environment containing two alt
 * **Phase = 0:** The gate is open when the Target arrives. [cite_start]Output is amplified[cite: 1157, 1158].
 * **Phase = $\pi$:** The gate is shifted. [cite_start]It is now closed when the Target hits, and open when the Distractor hits[cite: 1159, 1160]. [cite_start]Because the dendrite's geometry weakened the distractor, the output flatlines[cite: 1161].
 
-![The Physics of Resonance](dendritedoesfft.jpg)
+![The Physics of Resonance](takens_gated_deerskin.png)
 
 ## How to Run
 
