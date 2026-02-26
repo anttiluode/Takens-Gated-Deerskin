@@ -50,3 +50,7 @@ To switch attention from the Target to the Distractor, the network **does not ch
    `pip install -r requirements.txt`
 3. Run the simulation:
    `python takens_gated_deerskin.py`
+4 Or
+   `takens_is_all_we_need.py`
+
+![The Physics of Resonance](takens_is_all_we_need.png)
