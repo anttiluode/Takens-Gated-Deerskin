@@ -1,4 +1,4 @@
-# Takens-Gated Deerskin: Attention is a Phase Shift
+## Takens-Gated Deerskin: Attention is a Phase Shift
 
 This repository demonstrates a biological alternative to the Transformer "Attention" mechanism.
 
@@ -8,7 +8,7 @@ In standard modern AI, a network pays attention to a target and ignores a distra
 
 ---
 
-## The Architecture: Biological Ground Zero
+# The Architecture: Biological Ground Zero
 
 Instead of standard weight-based layers, this model uses a **Takens-Gated Deerskin Unit**, built from two core components:
 
