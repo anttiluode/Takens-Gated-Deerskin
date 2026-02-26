@@ -73,6 +73,17 @@ converting a "locked" hallucination into a "live" oscillating search.
 
 **Core Files**: `active_inference_takens.py`, `outer_loop_takens.py`
 
+### 4. Holographic Deerskin Codec (V2)
+
+- **Question**: Can phase-space geometry and Takens/Deerskin principles process real-time, continuous 2D visual
+   fields without collapsing into noise?
+- **The Task**: Real-time holographic reconstruction and continuous phase-transport of a live webcam feed.
+- **Key Result**: Replaced standard weight-based layers with a resonant medium (Fourier dendrites,
+   pure phase-rotation axons, and an IDFT decoder). Demonstrated that high outer-loop coupling ($\alpha$)
+  creates latent "standing waves" (ghosting memory) and Moiré interference patterns, making the network's internal
+   mathematical frequencies visible to the naked eye.
+- **Core Files**: `Holographic Deerskin Codec/webcam_deerskin_codec.py`, `Holographic Deerskin Codec/README.md`
+
 ## How to Run
 
 1. Clone the repository:
