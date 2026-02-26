@@ -1,5 +1,7 @@
 # The Holographic Deerskin Codec (V2)
 
+![Pic](pic.png)
+
 This folder contains the **Phase-Coherent Deerskin Architecture**, a real-time visual neural network that processes live webcam feeds not as grids of pixels, but as continuous topological interference patterns.
 
 Standard Vision Transformers and CNNs learn semantic textures. The Deerskin Codec acts as a **mathematical prism**, mapping the visual field into a library of spatial frequencies and shifting their phases to reconstruct the image holographically.
@@ -27,5 +29,6 @@ python webcam_deerskin_codec.py
 Sensory Regime (Alpha = 0.0): The network acts as a pure, real-time Fourier mirror.
 
 Memory Regime (Alpha = 0.5 - 0.8): The network begins to "ring," holding onto structural memories (ghosting) as objects leave the frame.
+
 
 Hallucination Regime (Alpha > 1.0): The network's feedback loop overpowers the sensory input, locking into Moiré interference patterns.
