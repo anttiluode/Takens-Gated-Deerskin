@@ -12,11 +12,16 @@ In standard modern AI, a network pays attention to a target and ignores a distra
 
 Instead of standard weight-based layers, this model uses a **Takens-Gated Deerskin Unit**, built from two core components:
 
-### 1. The Takens Dendrite (Geometry)
-- A biological dendrite does not perform a Fast Fourier Transform (FFT). Instead, it uses **delay lines (a Takens embedding)** to instantly reconstruct the phase-space geometry of an incoming signal (a Strange Attractor).
+# The Takens Dendrite (Geometry)
+
+Instead of static weight matrices, this model uses delay lines (a Takens embedding) to instantly reconstruct the
+phase-space geometry of an incoming time-series signal (a Strange Attractor).
+
 - It takes a flat 1D signal and expands it into a high-dimensional trajectory.
-- It multiplies this geometry against its own **Receptor Mosaic** (Moiré interference).
-- If the geometries match, the signal **resonates**.
+
+- It multiplies this geometry against its own Receptor Mosaic (Moiré interference).
+
+- If the geometries match, the signal resonates.
 
 ### 2. The Theta Soma (Time)
 - While high-frequency waves (Alpha/Gamma) act as strange attractors carrying complex content, low-frequency waves (Theta) act as a strict, rigid pacemaker.
