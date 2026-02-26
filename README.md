@@ -97,8 +97,6 @@ python takens_is_all_we_need.py
 
 # Explore sub-folders for specific experiments
 
-python "Dynamic Takens Dendrites/dynamic_takens_dendrites.py"
-
 Project Status: The Broad Deerskin Theory
 
 This project isolates the Takens Dendrite as a parameter-free frequency detector via phase-space geometry.
