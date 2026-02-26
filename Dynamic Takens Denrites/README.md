@@ -1,146 +1,107 @@
-# Dynamic Takens Dendrites
+# Takens-Gated Deerskin: Attention is a Phase Shift
 
-> Does a network of Takens dendrites perform sequence processing tasks without backpropagation, because the geometry does the work that gradient descent normally does?
+This repository demonstrates a biological alternative to the Transformer "Attention" mechanism,
+exploring the hypothesis that the physics of oscillatory signals encodes recognition priors for
+free through phase-space geometry.
 
-This is a sub-experiment of the broader [Takens-Gated Deerskin](../) project, testing that theoretical question directly.
+In standard modern AI, networks pay attention to targets by updating massive weight matrices and
+calculating dot products across sequences ($Q K^T$). In the Takens-Gated Deerskin architecture,
+attention is achieved by shifting the phase of a biological clock (Theta rhythm) to align with
+the reconstructed geometry of a signal (Takens embedding).
 
----
+## Core Architecture: Biological Ground Zero
 
-## What Was Attempted
+Instead of standard weight-based layers, this model uses a Takens-Gated Deerskin Unit:
 
-Standard neural networks learn to recognize patterns by adjusting weights through gradient descent. A transformer learns what a "40Hz token" looks like by seeing thousands of examples. The hypothesis here is that for oscillatory temporal signals, **the geometry of the phase-space orbit already encodes this information** — without any learning required.
+- **The Takens Dendrite (Geometry)**: Uses delay lines (Takens embedding) to instantly reconstruct
+-  the phase-space geometry of an incoming time-series signal. It multiplies this geometry against
+-   its own Receptor Mosaic; if the geometries match, the signal resonates.
 
-Takens' theorem (1981) states that for a dynamical system, you can reconstruct the full attractor topology from a single scalar observable using delay embeddings. The reconstructed phase space is topologically equivalent to the true state space. A 40Hz oscillation has a circular orbit in phase space. A 65Hz oscillation has a different circular orbit. A Takens dendrite tuned to 40Hz computes the dot product between the live signal's delay embedding and a cosine mosaic at 40Hz — this is a **topology match**, not a learned weight.
+- **The Theta Soma (Time)**: While high-frequency waves carry complex content, low-frequency
+-  waves (Theta) act as a strict pacemaker. The Soma acts as an exact Theta Gate, only allowing
+-   information to pass if it arrives during the positive peak of its internal clock.
 
-The question: if we build a bank of these dendrites (one per token type), each tuned by physics rather than training, can they decode sequences as accurately as a trained MLP?
+**The Key Insight**: To switch attention from a target to a distractor, the network does not change a
+single weight; it simply shifts the phase of its internal Theta clock.
 
----
+## Repository Structure & Experiments
 
-## The Task
+This project is organized into several sub-experiments, each testing a specific level of the theory:
 
-**Sequence decoding under noise.** Five token types encoded as frequency bursts (20, 40, 65, 95, 130 Hz). Six tokens per sequence. Each token is 40ms with:
-- FM wobble (±5%) — makes FFT peak detection unreliable
-- Additive Gaussian noise (σ = 0.2, signal amplitude = 1.0)
+### 1. Dynamic Takens Dendrites
 
-Three methods compete:
+- **Question**: Does geometry do the work that gradient descent normally does?
+- 
+- **The Task**: Sequence decoding of frequency tokens (20–130 Hz) under noise and FM wobble.
+- 
+- **Key Result**: A zero-parameter Takens bank achieved 87.4% accuracy, beating a trained MLP until the MLP
+-  had seen approximately 75 labeled examples.
+-  
+- **Core Files**: `dynamic_takens_dendrites.py`, `README.md`
 
-| Method | Parameters | Training samples |
-|--------|-----------|-----------------|
-| Takens Dendrite Bank | 0 | 0 |
-| FFT Peak Detector | 0 | 0 |
-| FFT + MLP | ~500 | variable |
+### 2. Closed Loop Takens
 
----
+- **Question**: Can a minimal recurrent loop perform context disambiguation without labels?
 
-## Results
+- **The Task**: Classifying an ambiguous 40Hz token based on a context token (11Hz or 61Hz) that occurred 90ms prior.
 
-```
-Takens bank  (0 params, 0 samples):  87.4% token accuracy
-FFT detector (0 params, 0 samples):  84.4% token accuracy
+- **Key Result**: Introduced an Adaptive Self-Buffer that "grows" (dendritic elongation) via a homeostatic frustration signal
+until it reaches the necessary temporal depth. Accuracy reached 92% without gradients.
 
-MLP training size vs accuracy:
-  10 samples:   60.0%  <- Takens wins
-  20 samples:   69.6%  <- Takens wins
-  30 samples:   78.1%  <- Takens wins
-  50 samples:   86.2%  <- Takens wins
-  75 samples:   88.9%  <- MLP wins  (crossover)
- 100 samples:   92.2%  <- MLP wins
- 500 samples:   99.9%  <- MLP wins
-```
+- **Core Files**: `closed_loop_takens.py`, `README.md`
 
-**Crossover: ~75 labeled training tokens**
+### 3. Outer Loop Takens
 
-The Takens dendrite bank beats a trained MLP until the MLP has seen approximately 75 labeled examples. With zero examples and zero parameters, the physics already knows most of what the network needs to learn.
+- **Question**: What happens when a network's predictions feed back to modulate its own sensors?
 
----
+#### Level 3 (Outer Loop)
 
-## What the Architecture Does
+Demonstrates three dynamical regimes based on coupling strength ($\alpha$):
 
-### TakensDendrite (single neuron)
+- Sensory (normal perception)
 
-```
-Input signal x(t)
-    └─> Delay buffer: [x(t), x(t-τ), x(t-2τ), ..., x(t-n_taps*τ)]
-            └─> Takens vector (phase-space sample)
-                    └─> dot product with receptor mosaic
-                            └─> resonance²  (power, phase-invariant)
-```
+- Limit Cycle (uncertainty/search)
 
-The `tau` is set to the quarter-period of the target frequency. This places the delay embedding orbit at 90 degrees, creating circular geometry in phase space. The mosaic is a cosine at the target frequency sampled at the tap positions — it matches the orbital shape that the target frequency produces.
+- Hallucination (prediction overrides sensation)
 
-**The key**: resonance is computed as `(takens_vector · mosaic)²`. Squaring removes the sign, making the output phase-invariant. The dendrite fires when the input oscillation matches its tuned frequency, regardless of where in the cycle the signal currently is.
+#### Level 4 (Active Inference)
 
-### TakensDendriteBank (network)
+Implements Active Error Detection. When a mismatch is detected, the network resets its belief buffers, 
+converting a "locked" hallucination into a "live" oscillating search.
 
-A parallel bank of dendrites, one per token frequency, all processing the same signal simultaneously. Winner-take-all readout in each token time window.
-
-```
-Signal ──┬──> Dendrite_20Hz  ──> power_map_1
-         ├──> Dendrite_40Hz  ──> power_map_2     Window average
-         ├──> Dendrite_65Hz  ──> power_map_3 ──> per token ──> argmax ──> token_id
-         ├──> Dendrite_95Hz  ──> power_map_4
-         └──> Dendrite_130Hz ──> power_map_5
-```
-
----
-
-## On the Theta Gate
-
-The theta gate from the parent repository (biological 4-8Hz rhythm) was tested here and found to **hurt** performance (87% → 64%) in this implementation. The reason is honest: in a single-readout setup, multiplying by a sinusoid randomly zeros some token windows. The biological purpose of the theta gate is to synchronize readout **across a distributed network** where different neurons fire at different theta phases. In a bank with one readout neuron, there is nothing to synchronize.
-
-A full multi-neuron implementation where each dendrite reports to a different soma, and theta synchronizes when each soma reads out its dendrite's accumulated phase — that is the correct architecture and would use the theta gate meaningfully. That is the next step.
-
----
-
-## What This Proves and What It Doesn't
-
-**Proves:**
-- A Takens dendrite bank achieves 87% accuracy with zero parameters and zero training
-- This beats a trained MLP until the MLP has seen ~75 labeled examples
-- The physics of oscillatory signals constitutes a temporal prior that replaces data
-
-**Does not prove:**
-- Superiority over well-trained large models (with enough data, MLP reaches 100%)
-- Generalization to non-oscillatory signals (chaotic attractors, natural language)
-- That a Takens network can replace transformers in general sequence tasks
-
-**The honest claim:** For temporal signals where the token types correspond to distinct oscillatory dynamics, Takens geometry encodes the recognition prior for free. You get ~87% accuracy without ever showing the network an example. A transformer needs to learn this from data. That difference is meaningful in the low-data regime, in energy-constrained hardware, and in biological systems that must work from birth.
-
----
+**Core Files**: `active_inference_takens.py`, `outer_loop_takens.py`
 
 ## How to Run
 
-```bash
-pip install numpy matplotlib scikit-learn
-python dynamic_takens_dendrites.py
-```
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/takens-gated-deerskin.git
+   ```
+   cd takens-gated-deerskin
+   
+Install the lightweight dependencies:
 
-Outputs:
-- Console: accuracy table with crossover point
-- `dynamic_takens_dendrites.png`: resonance maps, accuracy vs training curve, phase space portraits
+pip install -r requirements.txt
 
----
+Run the core simulations:
 
-## Connection to the Broader Deerskin Theory
+# Main attention demo
 
-This experiment isolates one component of the full theory: **the dendrite as a parameter-free frequency detector via phase-space geometry**. The broader theory adds:
+python takens_gated_deerskin.py
 
-1. **Theta-gated soma**: the temporal synchronizer that determines *when* the dendrite's accumulated phase is read out (tested in `autonomous_takens_vision.py`)
-2. **Network connectivity as topology maps**: each synapse passes the upstream neuron's phase-space geometry, not just a scalar value
-3. **Iterated Takens embeddings**: deeper layers see the dynamics of the dynamics — phase-space geometry of neurons whose inputs are themselves phase-space geometries
+# Sequence decoding demo
 
-This experiment establishes that component 1 (the dendrite alone) does real work. The full theory requires all three components working together.
+python takens_is_all_we_need.py
 
----
+# Explore sub-folders for specific experiments
 
-## Files
+python "Dynamic Takens Dendrites/dynamic_takens_dendrites.py"
 
-| File | Description |
-|------|-------------|
-| `dynamic_takens_dendrites.py` | Main experiment: sequence decoding, accuracy vs training, visualization |
-| `dynamic_takens_dendrites.png` | Output figure |
-| `README.md` | This file |
+Project Status: The Broad Deerskin Theory
 
----
+This project isolates the Takens Dendrite as a parameter-free frequency detector via phase-space geometry.
+The broader theory integrates these dendrites with Theta-gated somas for synchronization and iterated 
 
-*Part of the Takens-Gated Deerskin project. MIT License.*
+Takens embeddings where deeper layers process the dynamics of dynamics.
+
+Part of the Takens-Gated Deerskin project. MIT License.
