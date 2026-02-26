@@ -1,6 +1,6 @@
 # Takens-Gated Deerskin: Attention is a Phase Shift
 
-![Takens](dynamic_takens_dendrites.png)
+![Takens](dynamic_takens_deerskins.png)
 
 This repository demonstrates a biological alternative to the Transformer "Attention" mechanism,
 exploring the hypothesis that the physics of oscillatory signals encodes recognition priors for
