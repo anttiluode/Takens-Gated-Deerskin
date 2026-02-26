@@ -4,8 +4,6 @@ This repository demonstrates a biological alternative to the Transformer "Attent
 
 In standard modern AI, a network pays attention to a target and ignores a distractor by updating massive weight matrices and calculating dot products across an entire sequence (`Q K^T`).
 
-**Biological brains do not do this.** They do not calculate gradients to pay attention. They just shift their rhythm. This pure numpy simulation proves that Selective Attention can be achieved entirely through physics: Resonance and Phase-Locking.
-
 ---
 
 # The Architecture: Biological Ground Zero
