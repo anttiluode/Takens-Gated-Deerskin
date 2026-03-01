@@ -1,5 +1,9 @@
 # Quantum Field Computer (Deerskin Hardware Implementations)
 
+(These were originally just phase space exploration codes - not meant to be 'deerskin' neurons
+or their analogies, but by sheer co incidence the 'work' i have done led me to do these before the 
+theory itself matured.)
+
 This repository contains two experimental Python applications that
 demonstrate computation through geometric resonance. These scripts serve
 as the first physical/audio hardware implementations of the **Deerskin
