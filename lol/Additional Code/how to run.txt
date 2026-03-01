@@ -1,0 +1,20 @@
+PREDICTION 5.4 — BATCH TEST ACROSS SUBJECTS
+=============================================
+Runs the topological complexity analysis on ALL EDF files in a directory,
+aggregates results across subjects and runs.
+
+Ran with eegmmidb 1.0 Dataset 
+
+USAGE:
+    python batch_runner.py (folder with eeg files) 
+    python batch_runner.py . --pattern "S*R04.edf"   # only R04 runs
+    python batch_runner.py . --sim                    # include simulation
+
+The script finds all .edf files, runs the topology analysis on each,
+then produces:
+  - Per-file results
+  - Per-subject averages (across runs)
+  - Grand average across all subjects
+  - Statistical test of the prediction across the full population
+
+Authors: Luode & Claude, March 1, 2026
