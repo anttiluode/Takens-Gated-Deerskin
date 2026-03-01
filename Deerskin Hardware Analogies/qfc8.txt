@@ -1,0 +1,837 @@
+import numpy as np
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import pyaudio
+import time
+from scipy.fft import fft, fftfreq
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox
+import json
+import threading
+from datetime import datetime
+import logging
+
+# Configure logging
+logging.basicConfig(
+    filename='quantum_field_computer.log',
+    filemode='a',
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.DEBUG
+)
+
+class DynamicScalingLayer(nn.Module):
+    """Custom layer that dynamically scales inputs to handle extreme values and NaNs"""
+    def __init__(self, size):
+        super(DynamicScalingLayer, self).__init__()
+        self.size = size
+        self.scale_factors = nn.Parameter(torch.ones(size))
+        self.bias = nn.Parameter(torch.zeros(size))
+        self.eps = 1e-6
+
+    def forward(self, x):
+        x = torch.nan_to_num(x, nan=0.0, posinf=0.0, neginf=0.0)
+        max_vals = torch.max(torch.abs(x), dim=1, keepdim=True)[0] + self.eps
+        scaled_x = x / max_vals
+        return scaled_x * self.scale_factors + self.bias
+
+class AdaptiveFieldStatePredictor(nn.Module):
+    """Neural Network for Quantum Field State Prediction with dynamic layer handling"""
+    def __init__(self, input_size=100, min_layers=3, max_layers=10):
+        super(AdaptiveFieldStatePredictor, self).__init__()
+
+        self.input_size = input_size
+        self.min_layers = min_layers
+        self.max_layers = max_layers
+
+        self.input_scaling = DynamicScalingLayer(input_size)
+        self.layers = nn.ModuleList()
+        self.active_layers = min_layers
+
+        self._initialize_layers(min_layers)
+
+        self.output_transform = nn.Sequential(
+            nn.Linear(64, 1),
+            DynamicScalingLayer(1)
+        )
+
+        self.initial_projection = nn.Linear(input_size, 64)
+
+    def _initialize_layers(self, num_layers):
+        for _ in range(num_layers):
+            layer = nn.Sequential(
+                DynamicScalingLayer(64),
+                nn.Linear(64, 64),
+                nn.LayerNorm(64),
+                nn.GELU()
+            )
+            self.layers.append(layer)
+
+    def add_layer(self):
+        if len(self.layers) < self.max_layers:
+            self._initialize_layers(1)
+            self.active_layers += 1
+            return True
+        return False
+
+    def forward(self, x):
+        x = self.input_scaling(x)
+        x = self.initial_projection(x)
+
+        for i in range(self.active_layers):
+            try:
+                x = self.layers[i](x)
+            except RuntimeError as e:
+                if "nan" in str(e) or "inf" in str(e):
+                    if self.add_layer():
+                        x = self.layers[i](x)
+                    else:
+                        x = torch.nan_to_num(x, nan=0.0, posinf=1.0, neginf=-1.0)
+                else:
+                    raise e
+
+        return self.output_transform(x)
+
+    def adapt_to_data(self, data_sample):
+        if isinstance(data_sample, np.ndarray):
+            data_sample = torch.from_numpy(data_sample).float()
+
+        valid_data = data_sample[~torch.isnan(data_sample) & ~torch.isinf(data_sample)]
+        if len(valid_data) == 0:
+            return
+
+        data_range = torch.max(torch.abs(valid_data))
+        needed_layers = min(
+            self.max_layers,
+            self.min_layers + int(torch.log10(data_range + 1))
+        )
+
+        while self.active_layers < needed_layers:
+            self.add_layer()
+
+class CrystalResonanceDetector:
+    """Analyzes resonance patterns related to crystal oscillator frequencies within audio range"""
+    def __init__(self, base_crystal_freq=1000, fft_size=4096):  # Adjusted base frequency and FFT size
+        self.crystal_freq = base_crystal_freq
+        self.fft_size = fft_size
+        self.harmonics = []
+        self.subharmonics = []
+        self.resonance_history = []
+        self.last_peak_frequencies = []
+        self.interference_patterns = []
+
+    def compute_harmonics(self, order=10):
+        self.harmonics = [self.crystal_freq * n for n in range(1, order+1)]
+        self.subharmonics = [self.crystal_freq / n for n in range(1, order+1)]
+
+    def detect_resonance(self, signal_data, sample_rate):
+        n = self.fft_size
+        if len(signal_data) < n:
+            logging.warning("Signal data shorter than FFT size. Zero-padding.")
+            signal_data = np.pad(signal_data, (0, n - len(signal_data)), 'constant')
+        windowed_data = signal_data[:n] * np.hanning(n)
+        spectrum = np.abs(fft(windowed_data))
+        freqs = fftfreq(n, 1/sample_rate)
+
+        peaks = []
+        for harm in self.harmonics + self.subharmonics:
+            tolerance = harm * 0.01
+            mask = (freqs >= harm - tolerance) & (freqs <= harm + tolerance)
+            if np.any(mask):
+                peak_idx = np.argmax(spectrum[mask])
+                actual_freq = freqs[mask][peak_idx]
+                magnitude = spectrum[mask][peak_idx]
+                peaks.append({
+                    'frequency': actual_freq,
+                    'magnitude': magnitude,
+                    'harmonic': harm
+                })
+
+        self.resonance_history.append(peaks)
+        if len(self.resonance_history) > 1000:
+            self.resonance_history.pop(0)
+
+        return peaks
+
+    def analyze_interference(self, current_freq):
+        patterns = []
+        for harm in self.harmonics + self.subharmonics:
+            beat_freq = abs(harm - current_freq)
+            wavelength_ratio = max(harm, current_freq) / min(harm, current_freq)
+            patterns.append({
+                'harmonic': harm,
+                'beat_frequency': beat_freq,
+                'wavelength_ratio': wavelength_ratio
+            })
+
+        self.interference_patterns = patterns
+        return patterns
+
+class PhysicalSpeakerNeuron:
+    """Handles Audio Input/Output and Signal Generation"""
+    def __init__(self, sample_rate=44100, buffer_size=4096, input_device=None, output_device=None):
+        self.sample_rate = sample_rate
+        self.buffer_size = buffer_size
+        self.base_freq = 1000  # Adjusted to match resonance detector's base frequency
+        self.phase = 0
+        self.amplitude = 0.3
+        self.audio = pyaudio.PyAudio()
+        self.input_device = input_device
+        self.output_device = output_device
+        self.setup_audio()
+
+    def setup_audio(self):
+        try:
+            self.output_stream = self.audio.open(
+                format=pyaudio.paFloat32,
+                channels=1,
+                rate=self.sample_rate,
+                output=True,
+                output_device_index=self.output_device,
+                frames_per_buffer=self.buffer_size
+            )
+            logging.info(f"Opened output device index {self.output_device}")
+        except Exception as e:
+            error_msg = f"Failed to open output device (Index {self.output_device}): {e}"
+            logging.error(error_msg)
+            messagebox.showerror("Audio Output Error", error_msg)
+            raise e
+
+        try:
+            self.input_stream = self.audio.open(
+                format=pyaudio.paFloat32,
+                channels=1,
+                rate=self.sample_rate,
+                input=True,
+                input_device_index=self.input_device,
+                frames_per_buffer=self.buffer_size
+            )
+            logging.info(f"Opened input device index {self.input_device}")
+        except Exception as e:
+            error_msg = f"Failed to open input device (Index {self.input_device}): {e}"
+            logging.error(error_msg)
+            messagebox.showerror("Audio Input Error", error_msg)
+            raise e
+
+    def generate_wave(self):
+        t = np.linspace(0, self.buffer_size / self.sample_rate, self.buffer_size, endpoint=False)
+        wave = self.amplitude * np.sin(2 * np.pi * self.base_freq * t + self.phase)
+        self.phase += 2 * np.pi * self.base_freq * self.buffer_size / self.sample_rate
+        self.phase = self.phase % (2 * np.pi)
+        return wave
+
+    def forward(self):
+        try:
+            signal = self.generate_wave()
+            self.output_stream.write(signal.astype(np.float32).tobytes())
+            recorded = np.frombuffer(
+                self.input_stream.read(self.buffer_size, exception_on_overflow=False),
+                dtype=np.float32
+            )
+            return recorded
+        except Exception as e:
+            logging.error(f"Forward pass error: {e}")
+            return np.zeros(self.buffer_size, dtype=np.float32)
+
+    def cleanup(self):
+        try:
+            if hasattr(self, 'output_stream'):
+                self.output_stream.stop_stream()
+                self.output_stream.close()
+                logging.info("Closed output stream")
+            if hasattr(self, 'input_stream'):
+                self.input_stream.stop_stream()
+                self.input_stream.close()
+                logging.info("Closed input stream")
+            self.audio.terminate()
+            logging.info("Terminated PyAudio")
+        except Exception as e:
+            logging.error(f"Cleanup error: {e}")
+
+class QuantumFieldUI:
+    """Main Application UI"""
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Quantum Field Computer")
+        self.setup_variables()
+        self.setup_gui()
+        self.setup_predictor()
+        self.setup_crystal_detector()
+
+    def setup_variables(self):
+        self.sample_rate = 44100
+        self.buffer_size = 4096  # Match FFT size
+        self.sequence_length = 100
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        self.running = False
+        self.recording = False
+        self.predicting = False
+        self.wave_history = []
+        self.predicted_states = []
+        self.recorded_data = []
+
+        self.audio = pyaudio.PyAudio()
+        self.input_devices = self.get_audio_devices(True)
+        self.output_devices = self.get_audio_devices(False)
+
+    def setup_predictor(self):
+        self.predictor = AdaptiveFieldStatePredictor(
+            input_size=self.sequence_length,
+            min_layers=3,
+            max_layers=10
+        ).to(self.device)
+
+        self.optimizer = optim.Adam(self.predictor.parameters(), lr=0.0001)
+        self.criterion = nn.L1Loss()
+
+    def setup_crystal_detector(self):
+        self.crystal_detector = CrystalResonanceDetector(base_crystal_freq=1000, fft_size=self.buffer_size)
+        self.crystal_detector.compute_harmonics()
+        self.resonance_detected = False
+        self.last_resonance_time = time.time()
+        self.resonance_count = 0
+
+    def get_audio_devices(self, is_input):
+        devices = {}
+        for i in range(self.audio.get_device_count()):
+            try:
+                dev_info = self.audio.get_device_info_by_index(i)
+                if is_input and dev_info['maxInputChannels'] > 0:
+                    devices[dev_info['name']] = i
+                elif not is_input and dev_info['maxOutputChannels'] > 0:
+                    devices[dev_info['name']] = i
+            except Exception as e:
+                logging.error(f"Error accessing device index {i}: {e}")
+        return devices
+
+    def setup_gui(self):
+        # Make the main window resizable
+        self.root.rowconfigure(0, weight=1)
+        self.root.columnconfigure(0, weight=1)
+
+        # Main container
+        self.main_frame = ttk.Frame(self.root, padding="5")
+        self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        # Configure grid weights for main_frame
+        self.main_frame.rowconfigure(3, weight=1)  # Visualization row
+        self.main_frame.columnconfigure(0, weight=1)
+        self.main_frame.columnconfigure(1, weight=1)
+
+        # Device selection
+        self.setup_device_frame()
+
+        # Control panel
+        self.setup_control_frame()
+
+        # Frequency control
+        self.setup_frequency_frame()
+
+        # Visualization
+        self.setup_visualization()
+
+    def setup_device_frame(self):
+        device_frame = ttk.LabelFrame(self.main_frame, text="Device Selection", padding="5")
+        device_frame.grid(row=0, column=0, columnspan=2, sticky=(tk.W, tk.E))
+
+        self.input_var = tk.StringVar()
+        ttk.Label(device_frame, text="Input:").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+        self.input_combobox = ttk.Combobox(device_frame, textvariable=self.input_var,
+                                          values=list(self.input_devices.keys()), state="readonly", width=30)
+        self.input_combobox.grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
+        if self.input_devices:
+            self.input_combobox.current(0)
+
+        self.output_var = tk.StringVar()
+        ttk.Label(device_frame, text="Output:").grid(row=0, column=2, padx=5, pady=5, sticky=tk.W)
+        self.output_combobox = ttk.Combobox(device_frame, textvariable=self.output_var,
+                                           values=list(self.output_devices.keys()), state="readonly", width=30)
+        self.output_combobox.grid(row=0, column=3, padx=5, pady=5, sticky=tk.W)
+        if self.output_devices:
+            self.output_combobox.current(0)
+
+        ttk.Button(device_frame, text="Initialize",
+                  command=self.initialize_audio).grid(row=0, column=4, padx=5, pady=5, sticky=tk.W)
+
+        ttk.Button(device_frame, text="Refresh Devices",
+                  command=self.refresh_audio_devices).grid(row=0, column=5, padx=5, pady=5, sticky=tk.W)
+
+    def refresh_audio_devices(self):
+        # Refresh input devices
+        self.input_devices = self.get_audio_devices(True)
+        self.input_combobox['values'] = list(self.input_devices.keys())
+        if self.input_devices:
+            self.input_combobox.current(0)
+        else:
+            self.input_combobox.set('')
+
+        # Refresh output devices
+        self.output_devices = self.get_audio_devices(False)
+        self.output_combobox['values'] = list(self.output_devices.keys())
+        if self.output_devices:
+            self.output_combobox.current(0)
+        else:
+            self.output_combobox.set('')
+
+    def setup_control_frame(self):
+        control_frame = ttk.LabelFrame(self.main_frame, text="Controls", padding="5")
+        control_frame.grid(row=1, column=0, columnspan=2, sticky=(tk.W, tk.E))
+
+        self.start_button = ttk.Button(control_frame, text="Start",
+                                     command=self.toggle_running)
+        self.start_button.grid(row=0, column=0, padx=5, pady=5)
+
+        self.record_button = ttk.Button(control_frame, text="Record",
+                                      command=self.toggle_recording)
+        self.record_button.grid(row=0, column=1, padx=5, pady=5)
+
+        ttk.Button(control_frame, text="Train Model",
+                  command=self.train_model).grid(row=0, column=2, padx=5, pady=5)
+
+        self.predict_button = ttk.Button(control_frame, text="Start Prediction",
+                                       command=self.toggle_prediction)
+        self.predict_button.grid(row=0, column=3, padx=5, pady=5)
+
+        ttk.Button(control_frame, text="Save Model",
+                  command=self.save_model).grid(row=0, column=4, padx=5, pady=5)
+        ttk.Button(control_frame, text="Load Model",
+                  command=self.load_model).grid(row=0, column=5, padx=5, pady=5)
+
+    def setup_frequency_frame(self):
+        freq_frame = ttk.LabelFrame(self.main_frame, text="Frequency Control", padding="5")
+        freq_frame.grid(row=2, column=0, columnspan=2, sticky=(tk.W, tk.E))
+
+        self.freq_var = tk.StringVar(value="1000")  # Adjusted to match resonance detector's base frequency
+        ttk.Label(freq_frame, text="Frequency (Hz):").grid(row=0, column=0, padx=5, pady=5, sticky=tk.W)
+        ttk.Entry(freq_frame, textvariable=self.freq_var, width=15).grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
+
+        frequencies = [100, 500, 1000, 2000, 5000, 10000]  # Updated to relevant audio frequencies
+        for i, freq in enumerate(frequencies):
+            ttk.Button(freq_frame, text=f"{freq}Hz",
+                      command=lambda f=freq: self.set_frequency(f)).grid(row=0, column=i+2, padx=2, pady=5, sticky=tk.W)
+
+    def setup_visualization(self):
+        viz_frame = ttk.LabelFrame(self.main_frame, text="Visualization", padding="5")
+        viz_frame.grid(row=3, column=0, columnspan=2, sticky=(tk.W, tk.E, tk.N, tk.S))
+
+        # Configure grid weights for viz_frame
+        viz_frame.rowconfigure(0, weight=1)
+        viz_frame.columnconfigure(0, weight=1)
+
+        # Create a canvas with vertical and horizontal scrollbars
+        canvas = tk.Canvas(viz_frame)
+        v_scrollbar = ttk.Scrollbar(viz_frame, orient="vertical", command=canvas.yview)
+        h_scrollbar = ttk.Scrollbar(viz_frame, orient="horizontal", command=canvas.xview)
+        scrollable_frame = ttk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+
+        # Create matplotlib figure in the scrollable frame
+        self.fig = plt.Figure(figsize=(12, 10))
+        gs = self.fig.add_gridspec(3, 2)
+
+        self.wave_ax = self.fig.add_subplot(gs[0, 0])
+        self.wave_ax.set_title("Wave Activity")
+
+        self.phase_ax = self.fig.add_subplot(gs[0, 1])
+        self.phase_ax.set_title("Phase Space")
+
+        self.pred_ax = self.fig.add_subplot(gs[1, 0])
+        self.pred_ax.set_title("Field Prediction")
+
+        self.spectrum_ax = self.fig.add_subplot(gs[1, 1])
+        self.spectrum_ax.set_title("Wave Spectrum")
+
+        self.crystal_ax = self.fig.add_subplot(gs[2, :])
+        self.crystal_ax.set_title("Crystal Resonance Analysis")
+
+        self.canvas_fig = FigureCanvasTkAgg(self.fig, scrollable_frame)
+        self.canvas_fig.draw()
+        self.canvas_fig.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+        # Pack the canvas and scrollbars
+        canvas.pack(side="left", fill="both", expand=True)
+        v_scrollbar.pack(side="right", fill="y")
+        h_scrollbar.pack(side="bottom", fill="x")
+
+    def update_visualization(self):
+        if not self.wave_history:
+            return
+
+        try:
+            # Clear all plots
+            self.wave_ax.clear()
+            self.phase_ax.clear()
+            self.pred_ax.clear()
+            self.spectrum_ax.clear()
+            self.crystal_ax.clear()
+
+            # Get current wave
+            current_wave = self.wave_history[-1]
+
+            # Wave Activity Plot
+            self.wave_ax.plot(current_wave, 'b-')
+            self.wave_ax.set_title("Wave Activity")
+            self.wave_ax.grid(True)
+
+            # Phase Space Plot
+            if len(self.wave_history) >= 2:
+                prev_wave = self.wave_history[-2]
+                self.phase_ax.scatter(prev_wave, current_wave, c='g', s=1, alpha=0.5)
+            self.phase_ax.set_title("Phase Space")
+            self.phase_ax.grid(True)
+
+            # Prediction Plot
+            if self.predicted_states:
+                actual = np.array(self.wave_history[-len(self.predicted_states):])
+                predicted = np.array(self.predicted_states)
+                self.pred_ax.plot(actual.mean(axis=1), 'b-', label='Actual')
+                self.pred_ax.plot(predicted, 'r--', label='Predicted')
+                self.pred_ax.legend()
+            self.pred_ax.set_title("Field Prediction")
+            self.pred_ax.grid(True)
+
+            # Spectrum Plot
+            freqs = fftfreq(len(current_wave), 1/self.sample_rate)
+            spectrum = np.abs(fft(current_wave))
+            self.spectrum_ax.plot(freqs[:len(freqs)//2], spectrum[:len(spectrum)//2], 'purple')
+            self.spectrum_ax.set_title("Wave Spectrum")
+            self.spectrum_ax.set_xscale('log')
+            self.spectrum_ax.grid(True)
+
+            # Crystal Resonance Plot
+            resonances = self.crystal_detector.detect_resonance(current_wave, self.sample_rate)
+            if resonances:
+                frequencies = [r['frequency'] for r in resonances]
+                magnitudes = [r['magnitude'] for r in resonances]
+                markerline, stemlines, baseline = self.crystal_ax.stem(frequencies, magnitudes, 'b-',
+                                                                       label='Detected Resonances', basefmt=' ')
+
+                # Customize stemlines appearance
+                plt.setp(stemlines, 'linewidth', 1)
+
+                # Plot crystal harmonics
+                for harm in self.crystal_detector.harmonics:
+                    self.crystal_ax.axvline(x=harm, color='r', alpha=0.3,
+                                          linestyle='--', label='Crystal Harmonic')
+
+                # Plot interference patterns
+                if self.crystal_detector.interference_patterns:
+                    for pattern in self.crystal_detector.interference_patterns:
+                        self.crystal_ax.axvline(x=pattern['beat_frequency'], 
+                                              color='g', alpha=0.2, 
+                                              linestyle=':', label='Beat Frequency')
+
+            self.crystal_ax.set_xscale('log')
+            self.crystal_ax.set_title('Crystal Resonance Analysis')
+            self.crystal_ax.set_xlabel('Frequency (Hz)')
+            self.crystal_ax.set_ylabel('Magnitude')
+            self.crystal_ax.grid(True)
+
+            # To prevent duplicate labels in the legend
+            handles, labels = self.crystal_ax.get_legend_handles_labels()
+            by_label = dict(zip(labels, handles))
+            self.crystal_ax.legend(by_label.values(), by_label.keys())
+
+            # Update canvas
+            self.fig.tight_layout()
+            self.canvas_fig.draw()
+
+        except Exception as e:
+            logging.error(f"Visualization error: {e}")
+
+    def processing_loop(self):
+        while self.running:
+            try:
+                # Get wave data
+                wave_data = self.neuron.forward()
+                self.wave_history.append(wave_data)
+
+                # Limit history size
+                if len(self.wave_history) > self.sequence_length * 2:
+                    self.wave_history.pop(0)
+
+                # Crystal resonance analysis
+                if len(self.wave_history) >= 2:
+                    self.crystal_detector.analyze_interference(self.neuron.base_freq)
+                    resonances = self.crystal_detector.detect_resonance(
+                        self.wave_history[-1],
+                        self.sample_rate
+                    )
+
+                    # Check for quantum field interactions
+                    if resonances:
+                        self.resonance_detected = True
+                        self.resonance_count += 1
+                        logging.info(f"Potential quantum field interaction detected! Count: {self.resonance_count}")
+
+                # Record if active
+                if self.recording:
+                    self.record_frame(wave_data)
+
+                # Predict if active
+                if self.predicting and len(self.wave_history) >= self.sequence_length:
+                    self.predict_state()
+
+                # Update visualization
+                self.update_visualization()
+
+                time.sleep(0.01)
+
+            except Exception as e:
+                logging.error(f"Processing error: {e}")
+                break
+
+    def initialize_audio(self):
+        input_name = self.input_var.get()
+        output_name = self.output_var.get()
+
+        if not input_name or not output_name:
+            messagebox.showwarning("Device Selection", "Please select both input and output devices.")
+            return
+
+        try:
+            self.neuron = PhysicalSpeakerNeuron(
+                sample_rate=self.sample_rate,
+                buffer_size=self.buffer_size,
+                input_device=self.input_devices.get(input_name),
+                output_device=self.output_devices.get(output_name)
+            )
+            self.set_frequency(float(self.freq_var.get()))
+            messagebox.showinfo("Success", "Audio initialized successfully")
+            logging.info("Audio initialized successfully")
+        except Exception as e:
+            logging.error(f"Initialization failed: {e}")
+            # Error message already shown in PhysicalSpeakerNeuron
+
+    def set_frequency(self, freq):
+        if hasattr(self, 'neuron'):
+            self.neuron.base_freq = freq
+            self.freq_var.set(str(freq))
+            logging.info(f"Set base frequency to {freq} Hz")
+        else:
+            messagebox.showwarning("Not Initialized", "Please initialize audio first")
+            logging.warning("Attempted to set frequency without initializing audio")
+
+    def toggle_running(self):
+        if not hasattr(self, 'neuron'):
+            messagebox.showwarning("Not Initialized", "Please initialize audio first")
+            logging.warning("Attempted to start processing without initializing audio")
+            return
+
+        self.running = not self.running
+        self.start_button.config(text="Stop" if self.running else "Start")
+        logging.info(f"Processing {'started' if self.running else 'stopped'}")
+
+        if self.running:
+            self.processing_thread = threading.Thread(target=self.processing_loop, daemon=True)
+            self.processing_thread.start()
+
+    def toggle_recording(self):
+        if not self.running:
+            messagebox.showwarning("Not Running", "Please start the system first")
+            logging.warning("Attempted to toggle recording while not running")
+            return
+
+        self.recording = not self.recording
+        self.record_button.config(text="Stop Recording" if self.recording else "Record")
+        logging.info(f"Recording {'started' if self.recording else 'stopped'}")
+
+        if not self.recording and self.recorded_data:
+            self.save_recorded_data()
+
+    def toggle_prediction(self):
+        if not self.running:
+            messagebox.showwarning("Not Running", "Please start the system first")
+            logging.warning("Attempted to toggle prediction while not running")
+            return
+
+        self.predicting = not self.predicting
+        self.predict_button.config(text="Stop Prediction" if self.predicting else "Start Prediction")
+        logging.info(f"Prediction {'started' if self.predicting else 'stopped'}")
+
+    def predict_state(self):
+        try:
+            sequence = np.array(self.wave_history[-self.sequence_length:])
+            sequence_tensor = torch.tensor(sequence, dtype=torch.float32).to(self.device)
+
+            self.predictor.adapt_to_data(sequence_tensor)
+
+            self.predictor.eval()
+            with torch.no_grad():
+                prediction = self.predictor(sequence_tensor.unsqueeze(0))
+                self.predicted_states.append(prediction.item())
+
+            if len(self.predicted_states) > self.sequence_length:
+                self.predicted_states.pop(0)
+
+            logging.debug(f"Prediction made: {prediction.item()}")
+
+        except Exception as e:
+            logging.error(f"Prediction error: {e}")
+
+    def record_frame(self, wave_data):
+        frame_data = {
+            'timestamp': datetime.now().isoformat(),
+            'frequency': self.neuron.base_freq,
+            'wave_data': wave_data.tolist(),
+            'metadata': {
+                'sample_rate': self.sample_rate,
+                'buffer_size': self.buffer_size,
+                'resonances': self.crystal_detector.resonance_history[-1] if self.crystal_detector.resonance_history else None
+            }
+        }
+        self.recorded_data.append(frame_data)
+        logging.debug("Frame recorded")
+
+    def train_model(self):
+        try:
+            filename = filedialog.askopenfilename(
+                title="Select Training Data File",
+                filetypes=[("JSON Files", "*.json")],
+                defaultextension=".json"
+            )
+
+            if not filename:
+                logging.info("Training model canceled by user (no file selected)")
+                return
+
+            with open(filename, 'r') as f:
+                training_data = json.load(f)
+
+            if not training_data:
+                messagebox.showwarning("Empty Data", "Selected file contains no training data")
+                logging.warning("Selected training data file is empty")
+                return
+
+            # Create training progress window
+            progress_window = tk.Toplevel(self.root)
+            progress_window.title("Training Progress")
+
+            progress_var = tk.DoubleVar()
+            progress_bar = ttk.Progressbar(
+                progress_window,
+                variable=progress_var,
+                maximum=100,
+                length=300
+            )
+            progress_bar.pack(padx=10, pady=5)
+
+            status_var = tk.StringVar(value="Initializing training...")
+            status_label = ttk.Label(progress_window, textvariable=status_var)
+            status_label.pack(padx=10, pady=5)
+
+            # Prepare training data
+            sequences = []
+            targets = []
+
+            for i in range(len(training_data) - self.sequence_length):
+                seq = np.array([frame['wave_data'] for frame in
+                              training_data[i:i+self.sequence_length]])
+                target = np.array(training_data[i+self.sequence_length]['wave_data'])
+                sequences.append(seq)
+                targets.append(target.mean())
+
+            sequences = torch.tensor(sequences, dtype=torch.float32).to(self.device)
+            targets = torch.tensor(targets, dtype=torch.float32).to(self.device)
+
+            # Training loop
+            self.predictor.train()
+            epochs = 100
+
+            for epoch in range(epochs):
+                self.optimizer.zero_grad()
+                predictions = self.predictor(sequences)
+                loss = self.criterion(predictions, targets)
+                loss.backward()
+                self.optimizer.step()
+
+                # Update progress
+                progress_var.set((epoch + 1) / epochs * 100)
+                status_var.set(f"Epoch {epoch+1}/{epochs}, Loss: {loss.item():.6f}")
+                progress_window.update()
+
+                logging.debug(f"Training epoch {epoch+1}/{epochs}, Loss: {loss.item():.6f}")
+
+            progress_window.destroy()
+            messagebox.showinfo("Training Complete", "Model training finished successfully")
+            logging.info("Model training completed successfully")
+
+        except Exception as e:
+            logging.error(f"Training error: {e}")
+            messagebox.showerror("Training Error", str(e))
+
+    def save_model(self):
+        try:
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".pth",
+                filetypes=[("PyTorch Model", "*.pth")]
+            )
+            if filename:
+                torch.save({
+                    'model_state_dict': self.predictor.state_dict(),
+                    'optimizer_state_dict': self.optimizer.state_dict(),
+                }, filename)
+                messagebox.showinfo("Success", "Model saved successfully")
+                logging.info(f"Model saved successfully to {filename}")
+        except Exception as e:
+            logging.error(f"Save model error: {e}")
+            messagebox.showerror("Save Error", str(e))
+
+    def load_model(self):
+        try:
+            filename = filedialog.askopenfilename(
+                filetypes=[("PyTorch Model", "*.pth")]
+            )
+            if filename:
+                checkpoint = torch.load(filename, map_location=self.device)
+                self.predictor.load_state_dict(checkpoint['model_state_dict'])
+                self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+                messagebox.showinfo("Success", "Model loaded successfully")
+                logging.info(f"Model loaded successfully from {filename}")
+        except Exception as e:
+            logging.error(f"Load model error: {e}")
+            messagebox.showerror("Load Error", str(e))
+
+    def save_recorded_data(self):
+        try:
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".json",
+                filetypes=[("JSON Files", "*.json")]
+            )
+            if filename:
+                with open(filename, 'w') as f:
+                    json.dump(self.recorded_data, f)
+                self.recorded_data = []
+                messagebox.showinfo("Success", "Data saved successfully")
+                logging.info(f"Recorded data saved successfully to {filename}")
+        except Exception as e:
+            logging.error(f"Save recorded data error: {e}")
+            messagebox.showerror("Save Error", str(e))
+
+def main():
+    root = tk.Tk()
+    # Make the window resizable
+    root.geometry("1200x800")  # Set a larger default size
+    root.minsize(800, 600)      # Set a minimum size
+    app = QuantumFieldUI(root)
+    root.protocol("WM_DELETE_WINDOW", lambda: quit_application(root, app))
+    root.mainloop()
+
+def quit_application(root, app):
+    if hasattr(app, 'neuron'):
+        app.neuron.cleanup()
+    root.quit()
+    root.destroy()
+
+if __name__ == "__main__":
+    main()
