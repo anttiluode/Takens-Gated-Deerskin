@@ -1,8 +1,8 @@
 # Quantum Field Computer (Deerskin Hardware Implementations)
 
-EDIT: 
+Added actual deerskin hardware demo
 
-Added actual deerskin hardware demo. deerskin_visual_demo.py a simplified model: 
+deerskin_visual_demo.py  
 
 Here is the simplest way to explain what this app does, using plain language.
 
