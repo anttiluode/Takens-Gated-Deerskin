@@ -1,11 +1,11 @@
 """
-DEERSKIN TEST #3: Φ-DWELL × BETTI-1 UNIFIED CONSCIOUSNESS PROBE
+DEERSKIN TEST #3: GEOMETRIC DYSRHYTHMIA — MULTI-SCALE ATTRACTOR PATHOLOGY
 =================================================================
 Runs eigenmode vocabulary analysis (from the Φ-Dwell framework) on the
 same RepOD Schizophrenia EEG dataset, then correlates eigenmode metrics
 with the Betti-1 topological complexity and Theta PLV from Tests 1 & 2.
 
-PREDICTIONS (from the Geometric Dysrhythmia / Fractal Surfer framework):
+PREDICTIONS (from the Geometric Dysrhythmia framework):
 
 Schizophrenia (Hyper-Geometric) should show:
   1. HIGHER eigenmode vocabulary (more configurations visited)
@@ -15,12 +15,10 @@ Schizophrenia (Hyper-Geometric) should show:
   5. Betti-1 POSITIVELY CORRELATES with vocabulary size across subjects
   6. Theta PLV CORRELATES with dwell rigidity (lower CV variance)
 
-This bridges the two frameworks:
+Three independent measurement layers on the same brains:
   - Betti-1 measures the TOPOLOGY of the phase-space attractor
   - Φ-Dwell measures the GRAMMAR of eigenmode configuration trajectories
   - Theta PLV measures the COHERENCE of the gating mechanism
-  - Together they characterize consciousness as a fractal surf through
-    a multi-scale eigenmode manifold
 
 Dataset: RepOD "EEG in Schizophrenia" (Olejarczyk & Jernajczyk, 2017)
   14 Healthy Controls, 14 Schizophrenia patients
@@ -432,7 +430,7 @@ def analyze_subject_unified(filepath, graph_names, eigenvecs, max_duration_s=20)
 
 def main():
     print(f"{'=' * 80}")
-    print("DEERSKIN TEST #3: Φ-DWELL × BETTI-1 UNIFIED CONSCIOUSNESS PROBE")
+    print("DEERSKIN TEST #3: GEOMETRIC DYSRHYTHMIA — MULTI-SCALE ATTRACTOR PATHOLOGY")
     print(f"{'=' * 80}")
     print()
     print("Three layers of measurement on the same brains:")
@@ -662,7 +660,7 @@ def main():
     # INTERPRETATION
     # ─────────────────────────────────────────────────────────
     print(f"\n{'=' * 80}")
-    print("DEERSKIN INTERPRETATION: THREE LAYERS OF CONSCIOUSNESS")
+    print("DEERSKIN INTERPRETATION: THREE LAYERS OF GEOMETRIC DYSRHYTHMIA")
     print(f"{'=' * 80}")
     print("""
 The three measurement layers capture different aspects of a single process:
@@ -679,10 +677,11 @@ The three measurement layers capture different aspects of a single process:
     How does the brain move through its eigenmode configuration space?
     → Measures the VOCABULARY and SYNTAX of the macroscopic field trajectory.
 
-CONSCIOUSNESS = Coherent field (PLV > threshold)
-              + Critical dynamics (CV ≈ 1.0)
-              + Structured grammar (intermediate perplexity)
-              ...all holding simultaneously across the full band hierarchy.
+HEALTHY BRAIN DYNAMICS require:
+    Coherent gating (PLV > threshold)
+  + Critical dynamics (CV ≈ 1.0)
+  + Structured grammar (intermediate perplexity)
+  ...all holding simultaneously across the full band hierarchy.
 
 SCHIZOPHRENIA disrupts this as a HIJACKED GATE:
   → Betti-1 ↑ (geometric overflow — more topology in the field)
@@ -692,12 +691,12 @@ SCHIZOPHRENIA disrupts this as a HIJACKED GATE:
 ALZHEIMER'S disrupts this as a DEGRADED MANIFOLD:
   → Vocabulary ↑ but structure ↓ (more words, less concentration, flatter Zipf)
   → CV drops from criticality (can't hold a pattern)
-  → "The brain can no longer surf — it falls off the wave"
+  → The brain can no longer maintain stable attractor trajectories
 
-The fractal surfer is the coherent trajectory through multi-scale
-eigenmode space. Health is staying on the wave. Disease is either
-being hijacked by an internal wave (schizophrenia) or losing the
-wave entirely (Alzheimer's).
+The healthy brain maintains a coherent trajectory through multi-scale
+eigenmode space. Disease is either being hijacked by an internal
+attractor (schizophrenia) or losing stable attractor structure
+entirely (Alzheimer's).
 """)
 
 
