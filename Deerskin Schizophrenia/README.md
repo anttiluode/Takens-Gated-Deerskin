@@ -1,9 +1,12 @@
-Geometric Dysrhythmia: Schizophrenia as a Hyper-Geometric State in the
-Deerskin Architecture Antti Luode (PerceptionLab \| Independent
+# Geometric Dysrhythmia: Schizophrenia as a Hyper-Geometric State in the Deerskin Architecture 
+
+Antti Luode (PerceptionLab \| Independent
 Research, Finland) Claude (Anthropic, Collaborative formalization) Date:
 March 2026
 
-Abstract The standard medical model of psychiatric illness relies
+# Abstract 
+
+The standard medical model of psychiatric illness relies
 heavily on a one-dimensional scalar framework: the "chemical imbalance"
 of neurotransmitters. We propose a fundamental paradigm shift based on
 the Deerskin Architecture, which posits that the brain computes through
