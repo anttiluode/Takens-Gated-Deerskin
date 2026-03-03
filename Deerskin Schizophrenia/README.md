@@ -1,6 +1,16 @@
 # Geometric Dysrhythmia: Schizophrenia EEG Test
 
-Overview
+# How to Run
+
+Install the required dependencies:
+
+pip install -r requirements.txt
+
+Execute the script (it will automatically download the RepOD dataset to a local folder and run the topological analysis):
+
+python schizophrenia.py
+
+# Overview
 
 This document outlines the empirical validation of the Deerskin
 Architecture using clinical EEG data. Instead of treating psychiatric
