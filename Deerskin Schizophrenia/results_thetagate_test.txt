@@ -1,0 +1,96 @@
+E:\DocsHouse\614\Deerskin Schizophrenia>python3.13 schizophrenia_thetagate.py
+================================================================================
+DEERSKIN TEST #2: THETA GATE INTEGRITY vs. TOPOLOGICAL COMPLEXITY
+================================================================================
+
+PREDICTIONS (from Deerskin Architecture):
+  1. SZ subjects have LOWER frontal theta phase coherence (broken gate)
+  2. Across ALL subjects, theta coherence NEGATIVELY correlates with Betti-1
+     (worse gate synchrony → more geometric overflow)
+
+Querying RepOD Dataverse API for Schizophrenia dataset...
+Found 28 files. Downloading EDFs...
+Downloading: 100%|█████████████████████████████████████████████████████████████████████| 28/28 [00:45<00:00,  1.64s/it]
+
+Extracting topology + theta coherence from each subject...
+Processing: 100%|██████████████████████████████████████████████████████████████████████| 28/28 [00:38<00:00,  1.39s/it]
+
+================================================================================
+TEST 1: THETA PHASE COHERENCE (Frontal PLV in 4-8 Hz)
+================================================================================
+  Healthy Controls (n=14):  Mean PLV = 0.5708  (SD = 0.1019)
+  Schizophrenia    (n=14):  Mean PLV = 0.6291  (SD = 0.0543)
+
+  t-test: t = -1.820, p = 0.0802
+  → PREDICTION 1 REVERSED: SZ shows elevated theta coherence (unexpected).
+
+================================================================================
+TEST 2: CORRELATION — THETA COHERENCE vs. TOPOLOGICAL COMPLEXITY
+================================================================================
+  All subjects (n=28):
+    Pearson  r = 0.175,  p = 0.3740
+    Spearman ρ = 0.155,  p = 0.4296
+  → PREDICTION 2 NOT CONFIRMED at this sample size.
+
+================================================================================
+TEST 3: WITHIN-GROUP CORRELATIONS
+================================================================================
+  HC (n=14): Pearson r = 0.079, p = 0.7873
+  SZ (n=14): Pearson r = 0.031, p = 0.9163
+
+================================================================================
+REPLICATION: BETTI-1 GROUP DIFFERENCE (same as schizophrenia.py)
+================================================================================
+  HC Mean Betti-1: 16.544
+  SZ Mean Betti-1: 18.492
+  t = -1.991, p = 0.0571
+
+================================================================================
+INDIVIDUAL SUBJECT DATA
+================================================================================
+  Subject      Group     Betti-1    Theta PLV
+  ------------------------------------------
+  HC_1        HC         19.021       0.4458
+  HC_2        HC         17.120       0.6825
+  HC_3        HC         12.851       0.5131
+  HC_4        HC         19.056       0.5641
+  HC_5        HC         13.400       0.5381
+  HC_6        HC         16.963       0.8014
+  HC_7        HC         15.811       0.4057
+  HC_8        HC         20.016       0.4900
+  HC_9        HC         17.968       0.6227
+  HC_10       HC         15.870       0.6674
+  HC_11       HC         13.941       0.5542
+  HC_12       HC         12.315       0.5530
+  HC_13       HC         17.795       0.4953
+  HC_14       HC         19.491       0.6583
+  SZ_1        SZ         16.968       0.6368
+  SZ_2        SZ         14.972       0.6418
+  SZ_3        SZ         19.347       0.7618
+  SZ_4        SZ         22.671       0.5917
+  SZ_5        SZ         19.074       0.5909
+  SZ_6        SZ         16.266       0.5802
+  SZ_7        SZ         17.960       0.5450
+  SZ_8        SZ         17.080       0.6512
+  SZ_9        SZ         16.997       0.6624
+  SZ_10       SZ         21.718       0.6150
+  SZ_11       SZ         19.683       0.6092
+  SZ_12       SZ         14.823       0.6608
+  SZ_13       SZ         22.933       0.6937
+  SZ_14       SZ         18.396       0.5674
+
+================================================================================
+DEERSKIN INTERPRETATION
+================================================================================
+
+If both predictions hold, this demonstrates the MECHANISM, not just the symptom:
+  - Test 1 (Betti-1 ↑ in SZ) shows the EFFECT: geometric overflow
+  - Test 2 (Theta PLV ↓ in SZ) shows the CAUSE: broken phase gate
+  - Correlation (PLV↓ ↔ Betti-1↑) shows they are LINKED within subjects
+
+The Theta Phase Gate segments the continuous geometric stream into
+processable frames. When it desynchronizes, the geometry piles up.
+The hallucination is not a chemical event — it is an unlocked gate.
+
+
+E:\DocsHouse\614\Deerskin Schizophrenia>
