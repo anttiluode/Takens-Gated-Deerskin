@@ -2,6 +2,11 @@
 
 The papers about it are in lol folder. lol 
 
+New de cluttered repo that concentrates on the fact that we were able to recognize 
+schizophrenica using these ideas from healthy brain is at: 
+
+https://github.com/anttiluode/Geometric-Neuron 
+
 ![Takens](takens_gated_deerskin.png)
 
 This repository demonstrates a biological alternative to the Transformer "Attention" mechanism,
