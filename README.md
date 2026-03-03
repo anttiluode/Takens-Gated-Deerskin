@@ -1,5 +1,7 @@
 # Takens-Gated Deerskin: Attention is a Phase Shift
 
+The papers about it are in lol folder. lol 
+
 ![Takens](takens_gated_deerskin.png)
 
 This repository demonstrates a biological alternative to the Transformer "Attention" mechanism,
